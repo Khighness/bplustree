@@ -1,5 +1,7 @@
 package bplustree
 
+import "sort"
+
 // @Author KHighness
 // @Update 2023-05-20
 
@@ -54,17 +56,66 @@ func newInteriorNode(p *interiorNode, largestChild node) *interiorNode {
 }
 
 func (in *interiorNode) find(key int) (int, bool) {
-	panic("implement me")
+	c := func(i int) bool {
+		return in.kcs[i].key > key
+	}
+
+	i := sort.Search(in.count-1, c)
+
+	return i, true
 }
 
 func (in *interiorNode) parent() *interiorNode {
-	panic("implement me")
+	return in.p
 }
 
 func (in *interiorNode) setParent(i *interiorNode) {
-	panic("implement me")
+	in.p = p
 }
 
 func (in *interiorNode) full() bool {
-	panic("implement me")
+	return in.count == MaxKc
+}
+
+func (in *interiorNode) insert(key int, child node) (int, *interiorNode, bool) {
+	i, _ := in.find(key)
+
+	if !in.full() {
+		copy(in.kcs[i+1:], in.kcs[i:in.count])
+
+		in.kcs[i].key = key
+		in.kcs[i].child = child
+		child.setParent(in)
+
+		in.count++
+		return 0, nil, false
+	}
+
+	in.kcs[MaxKc].key = key
+	in.kcs[MaxKc].child = child
+	child.setParent(in)
+
+	next, midKey := in.split()
+
+	return midKey, next, true
+}
+
+func (in *interiorNode) split() (*interiorNode, int) {
+	sort.Sort(&in.kcs)
+
+	midIndex := MaxKc >> 1
+	midChild := in.kcs[midIndex].child
+	midKey := in.kcs[midIndex].key
+
+	next := newInteriorNode(nil, nil)
+	copy(next.kcs[0:], in.kcs[midIndex+1:])
+	next.count = MaxKc - midIndex
+	for i := 0; i < next.count; i++ {
+		next.kcs[i].child.setParent(next)
+	}
+
+	in.count = midIndex + 1
+	midChild.setParent(in)
+
+	return next, midKey
 }
