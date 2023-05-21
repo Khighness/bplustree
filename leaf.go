@@ -9,7 +9,7 @@ import (
 // @Update 2023-05-20
 
 const (
-	MaxKv = 255
+	MaxKV = 255
 )
 
 type kv struct {
@@ -17,10 +17,10 @@ type kv struct {
 	value string
 }
 
-type kvs [MaxKv]kv
+type kvs [MaxKV]kv
 
 func (a *kvs) Len() int           { return len(a) }
-func (a *kvs) Less(i, j int) bool { return k[i].key < k[j].key }
+func (a *kvs) Less(i, j int) bool { return a[i].key < a[j].key }
 func (a *kvs) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
 
 func (a *kvs) String() string {
@@ -62,12 +62,12 @@ func (ln *leafNode) parent() *interiorNode {
 	return ln.p
 }
 
-func (ln *leafNode) setParent(i *interiorNode) {
+func (ln *leafNode) setParent(p *interiorNode) {
 	ln.p = p
 }
 
 func (ln *leafNode) full() bool {
-	return ln.count == MaxKv
+	return ln.count == MaxKV
 }
 
 func (ln *leafNode) insert(key int, value string) (int, bool) {
@@ -87,6 +87,14 @@ func (ln *leafNode) insert(key int, value string) (int, bool) {
 	}
 
 	next := ln.split()
+
+	if key < next.kvs[0].key {
+		ln.insert(key, value)
+	} else {
+		next.insert(key, value)
+	}
+
+	return next.kvs[0].key, true
 }
 
 func (ln *leafNode) split() *leafNode {
@@ -94,7 +102,7 @@ func (ln *leafNode) split() *leafNode {
 
 	copy(next.kvs[0:], ln.kvs[ln.count/2+1:])
 
-	next.count = MaxKv - ln.count/2 - 1
+	next.count = MaxKV - ln.count/2 - 1
 	next.next = ln.next
 
 	ln.count = ln.count/2 + 1

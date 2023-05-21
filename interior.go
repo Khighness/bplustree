@@ -6,7 +6,7 @@ import "sort"
 // @Update 2023-05-20
 
 const (
-	MaxKc = 511
+	MaxKC = 511
 )
 
 type kc struct {
@@ -14,7 +14,7 @@ type kc struct {
 	child node
 }
 
-type kcs [MaxKc + 1]kc
+type kcs [MaxKC + 1]kc
 
 func (a *kcs) Len() int {
 	return len(a)
@@ -69,12 +69,12 @@ func (in *interiorNode) parent() *interiorNode {
 	return in.p
 }
 
-func (in *interiorNode) setParent(i *interiorNode) {
+func (in *interiorNode) setParent(p *interiorNode) {
 	in.p = p
 }
 
 func (in *interiorNode) full() bool {
-	return in.count == MaxKc
+	return in.count == MaxKC
 }
 
 func (in *interiorNode) insert(key int, child node) (int, *interiorNode, bool) {
@@ -91,8 +91,8 @@ func (in *interiorNode) insert(key int, child node) (int, *interiorNode, bool) {
 		return 0, nil, false
 	}
 
-	in.kcs[MaxKc].key = key
-	in.kcs[MaxKc].child = child
+	in.kcs[MaxKC].key = key
+	in.kcs[MaxKC].child = child
 	child.setParent(in)
 
 	next, midKey := in.split()
@@ -103,13 +103,13 @@ func (in *interiorNode) insert(key int, child node) (int, *interiorNode, bool) {
 func (in *interiorNode) split() (*interiorNode, int) {
 	sort.Sort(&in.kcs)
 
-	midIndex := MaxKc >> 1
+	midIndex := MaxKC >> 1
 	midChild := in.kcs[midIndex].child
 	midKey := in.kcs[midIndex].key
 
 	next := newInteriorNode(nil, nil)
 	copy(next.kcs[0:], in.kcs[midIndex+1:])
-	next.count = MaxKc - midIndex
+	next.count = MaxKC - midIndex
 	for i := 0; i < next.count; i++ {
 		next.kcs[i].child.setParent(next)
 	}
