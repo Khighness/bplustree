@@ -146,9 +146,9 @@ public class BPlusNode<K extends Comparable<K>, V> {
                 left.parent = parent;
                 right.parent = parent;
 
-                parent.children.add(index, left);
-                parent.children.add(index + 1, right);
-                parent.entries.add(index, right.entries.get(0));
+                parent.children.add(currIndex, left);
+                parent.children.add(currIndex + 1, right);
+                parent.entries.add(currIndex, right.entries.get(0));
                 entries = null;
                 children = null;
 

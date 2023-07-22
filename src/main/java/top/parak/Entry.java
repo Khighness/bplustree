@@ -11,7 +11,7 @@ public interface Entry<K, V> {
     /**
      * 获取键
      *
-     * @return 见
+     * @return 键
      */
     K getKey();
 
