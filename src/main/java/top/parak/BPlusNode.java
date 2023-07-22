@@ -271,7 +271,7 @@ public class BPlusNode<K extends Comparable<K>, V> {
                 }
 
                 // 否则，调整父节点
-                parent.adjust(tree);
+                parent.adjustIterior(tree);
                 return removedValue;
             }
 
@@ -303,7 +303,7 @@ public class BPlusNode<K extends Comparable<K>, V> {
                     return removedValue;
                 }
 
-                parent.adjust(tree);
+                parent.adjustIterior(tree);
                 return removedValue;
             }
         }
@@ -483,7 +483,7 @@ public class BPlusNode<K extends Comparable<K>, V> {
      *
      * @param tree 树
      */
-    private void adjust(BPlusTree<K, V> tree) {
+    private void adjustIterior(BPlusTree<K, V> tree) {
         // 如果子节点数 < M/2 或者 2，需要合并节点
         if (children.size() < tree.getOrder() >> 1 || children.size() < 2) {
             if (isRoot) {
@@ -565,7 +565,7 @@ public class BPlusNode<K extends Comparable<K>, V> {
                     return;
                 }
 
-                parent.adjust(tree);
+                parent.adjustIterior(tree);
                 return;
             }
 
@@ -591,7 +591,7 @@ public class BPlusNode<K extends Comparable<K>, V> {
                     return;
                 }
 
-                parent.adjust(tree);
+                parent.adjustIterior(tree);
             }
         }
     }
