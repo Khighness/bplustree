@@ -162,9 +162,9 @@ public class BPlusNode<K extends Comparable<K>, V> {
                 left.parent = root;
                 right.parent = parent;
 
-                parent.children.add(left);
-                parent.children.add(right);
-                parent.entries.add(right.entries.get(0));
+                root.children.add(left);
+                root.children.add(right);
+                root.entries.add(right.entries.get(0));
 
                 entries = null;
                 children = null;
@@ -182,6 +182,13 @@ public class BPlusNode<K extends Comparable<K>, V> {
         }
     }
 
+    /**
+     * 删除
+     *
+     * @param key  键
+     * @param tree 树
+     * @return 被删除键对应的值，如果键不存在则返回{@code null}
+     */
     public V remove(K key, BPlusTree<K, V> tree) {
         if (isLeaf) {
             int index = binarySearchInLeaf(key);
@@ -224,7 +231,7 @@ public class BPlusNode<K extends Comparable<K>, V> {
                 return removeLeaf(key);
             }
 
-            // 与前面节点合并
+            // 与前驱节点合并
             if (prev != null
                     && prev.parent == parent
                     && (prev.entries.size() <= tree.getOrder() >> 1 || prev.entries.size() <= 2)) {
@@ -269,7 +276,7 @@ public class BPlusNode<K extends Comparable<K>, V> {
                 return removedValue;
             }
 
-            // 与后面节点合并
+            // 与后继节点合并
             if (next != null
             && next.parent == parent
             && (next.entries.size() <= tree.getOrder() >> 1 || next.entries.size() <= 2)) {
@@ -302,8 +309,13 @@ public class BPlusNode<K extends Comparable<K>, V> {
             }
         }
 
-        // TODO(Khighness)
-        return null;
+        if (key.compareTo(firstKey()) < 0) {
+            return firstChild().remove(key, tree);
+        } else if (key.compareTo(lastKey()) >= 0) {
+            return lastChild().remove(key, tree);
+        } else {
+            return children.get(binarySearchInInterior(key)).remove(key, tree);
+        }
     }
 
     /**
@@ -467,6 +479,11 @@ public class BPlusNode<K extends Comparable<K>, V> {
         }
     }
 
+    /**
+     * 删除后进行调整
+     *
+     * @param tree 树
+     */
     private void adjust(BPlusTree<K, V> tree) {
         // 如果子节点数 < M/2 或者 2，需要合并节点
         if (children.size() < tree.getOrder() >> 1 || children.size() < 2) {
@@ -494,6 +511,7 @@ public class BPlusNode<K extends Comparable<K>, V> {
                 next = parent.children.get(nextIndex);
             }
 
+            // 如果前驱节点的子节点数 > M/2 并且 > 2，则从前驱节点处借补
             if (prev != null
                     && prev.children.size() > tree.getOrder() >> 1
                     && prev.children.size() > 2) {
@@ -502,12 +520,89 @@ public class BPlusNode<K extends Comparable<K>, V> {
                 prev.children.remove(prevLastIndex);
                 borrow.parent = this;
                 children.add(0, borrow);
+
+                entries.add(0, parent.entries.get(prevIndex));
+                parent.entries.set(prevIndex, prev.entries.remove(prevLastIndex - 1));
+                return;
+            }
+
+            // 如果后继节点的子节点数 > M/2 并且 > 2，则从后继结点处借补
+            if (next != null
+                    && next.children.size() > tree.getOrder() >> 1
+                    && next.children.size() > 2) {
+                BPlusNode<K, V> borrow = next.children.get(0);
+                next.children.remove(0);
+                borrow.parent = this;
+                children.add(borrow);
+
+                entries.add(parent.entries.get(currIndex));
+                parent.entries.set(currIndex, next.entries.remove(0));
+                return;
+            }
+
+            // 与前驱节点合并
+            if (prev != null && (prev.children.size() <= tree.getOrder() >> 1 || prev.children.size() <= 2)) {
+                for (int i = 0; i < children.size(); i++) {
+                    prev.children.add(children.get(i));
+                }
+                for (int i = 0; i < prev.children.size(); i++) {
+                    prev.children.get(i).parent = this;
+                }
+                prev.entries.add(parent.entries.get(prevIndex));
+                for (int i = 0; i < entries.size(); i++) {
+                    prev.entries.add(entries.get(i));
+                }
+                children = prev.children;
+                entries = prev.entries;
+
+                parent.children.remove(prev);
+                prev.parent = null;
+                prev.children = null;
+                prev.entries = null;
+                parent.entries.remove(parent.children.indexOf(this));
+
+                if (parent.isRoot && parent.children.size() >= 2
+                        || !parent.isRoot && parent.children.size() >= tree.getOrder() >> 1 && parent.children.size() >= 2) {
+                    return;
+                }
+
+                parent.adjust(tree);
+                return;
+            }
+
+            // 与后继结点合并
+            if (next != null && (next.children.size() <= tree.getOrder() / 2 || next.children.size() <= 2)) {
+                for (int i = 0; i < next.children.size(); i++) {
+                    BPlusNode<K, V> child = next.children.get(i);
+                    children.add(child);
+                    child.parent = this;
+                }
+                entries.add(parent.entries.get(currIndex));
+                for (int i = 0; i < next.entries.size(); i++) {
+                    entries.add(next.entries.get(i));
+                }
+                parent.children.remove(next);
+                next.parent = null;
+                next.children = null;
+                next.entries = null;
+                parent.entries.remove(parent.children.indexOf(this));
+
+                if (parent.isRoot && parent.children.size() >= 2
+                        || !parent.isRoot && parent.children.size() >= tree.getOrder() >> 1 && parent.children.size() >= 2) {
+                    return;
+                }
+
+                parent.adjust(tree);
             }
         }
-
-        // TODO(Khighness)
     }
 
+    /**
+     * 移除叶子节点
+     *
+     * @param key 键
+     * @return 节点的值
+     */
     private V removeLeaf(K key) {
         int index = binarySearchInLeaf(key);
         if (index == NOT_FOUND) {

@@ -83,7 +83,11 @@ public class BPlusTree<K extends Comparable<K>, V> {
     }
 
     public void set(K key, V value) {
+        root.put(key, value, this);
+    }
 
+    public V remove(K key) {
+        return root.remove(key, this);
     }
 
 }
