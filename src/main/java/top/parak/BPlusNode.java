@@ -558,7 +558,7 @@ public class BPlusNode<K extends Comparable<K>, V> {
                 prev.parent = null;
                 prev.children = null;
                 prev.entries = null;
-                parent.entries.remove(parent.children.indexOf(this));
+                parent.entries.remove(currIndex);
 
                 if (parent.isRoot && parent.children.size() >= 2
                         || !parent.isRoot && parent.children.size() >= tree.getOrder() >> 1 && parent.children.size() >= 2) {
@@ -584,7 +584,7 @@ public class BPlusNode<K extends Comparable<K>, V> {
                 next.parent = null;
                 next.children = null;
                 next.entries = null;
-                parent.entries.remove(parent.children.indexOf(this));
+                parent.entries.remove(currIndex);
 
                 if (parent.isRoot && parent.children.size() >= 2
                         || !parent.isRoot && parent.children.size() >= tree.getOrder() >> 1 && parent.children.size() >= 2) {
